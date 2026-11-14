@@ -1,0 +1,11 @@
+@Demonstration_Database_HostAddress = http://localhost:5198
+
+GET {{Demonstration_Database_HostAddress}}/openapi/v1.json
+Accept: application/json
+
+###
+
+GET {{Demonstration_Database_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

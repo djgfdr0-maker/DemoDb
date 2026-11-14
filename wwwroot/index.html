@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise CRM & Database Management Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/theme.css">
+</head>
+<body class="flex h-screen w-full overflow-hidden">
+
+    <!-- SIDEBAR -->
+    <aside class="w-64 bg-[#070a12] border-r border-blue-900/20 flex flex-col justify-between hidden md:flex z-20">
+        <div>
+            <div class="p-5 flex items-center space-x-3 border-b border-blue-900/10">
+                <div class="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center glow-box">
+                    <i class="fa-solid fa-cube text-white text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-sm tracking-wide">EnterpriseDB</h1>
+                    <p class="text-[10px] text-blue-400">Secure IAM & CRM v2.4</p>
+                </div>
+            </div>
+
+            <nav class="p-4 space-y-1.5 text-sm">
+                <a href="#" onclick="switchTab('database')" id="nav-database" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-lg bg-blue-600 text-white font-medium transition shadow-lg shadow-blue-600/20">
+                    <i class="fa-solid fa-database w-5"></i><span>Database</span>
+                </a>
+                <a href="#" onclick="switchTab('schema')" id="nav-schema" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800/50 transition">
+                    <i class="fa-solid fa-network-wired w-5"></i><span>Schema / ERD</span>
+                </a>
+                <a href="#" onclick="switchTab('security')" id="nav-security" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800/50 transition">
+                    <i class="fa-solid fa-shield-halved w-5"></i><span>Security & RBAC</span>
+                </a>
+                <a href="#" onclick="switchTab('analytics')" id="nav-analytics" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800/50 transition">
+                    <i class="fa-solid fa-chart-line w-5"></i><span>Analytics</span>
+                </a>
+                <a href="#" onclick="switchTab('logs')" id="nav-logs" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800/50 transition">
+                    <i class="fa-solid fa-rectangle-list w-5"></i><span>Audit Logs</span>
+                </a>
+            </nav>
+        </div>
+
+        <div class="p-4 border-t border-blue-900/10 text-xs">
+            <div class="glass-card p-3 rounded-lg">
+                <div class="flex items-center justify-between mb-1">
+                    <span class="flex items-center space-x-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span class="font-medium text-emerald-400">System Online</span>
+                    </span>
+                </div>
+                <p class="text-[11px] text-gray-400" id="uptime-display">Uptime: 0h 0m</p>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 flex flex-col h-screen overflow-hidden">
+        <header class="h-16 bg-[#0b0f19] border-b border-blue-900/20 px-6 flex items-center justify-between z-10">
+            <div>
+                <h2 id="page-title" class="font-bold text-lg tracking-tight">Database Management</h2>
+                <p id="page-subtitle" class="text-xs text-gray-400">Manage and view your data in real-time</p>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <div class="relative">
+                    <button onclick="toggleNotifications()" class="w-9 h-9 rounded-lg glass-card flex items-center justify-center text-gray-400 hover:text-white relative">
+                        <i class="fa-regular fa-bell text-sm"></i>
+                        <span class="absolute top-2 right-2 w-2 h-2 bg-blue-500 rounded-full animate-ping"></span>
+                    </button>
+                    <div id="notifications-dropdown" class="absolute right-0 mt-2 w-72 glass-card p-4 hidden shadow-2xl z-50 space-y-3">
+                        <div class="flex justify-between items-center border-b border-blue-900/20 pb-2">
+                            <span class="font-bold text-xs text-blue-400">System Notifications</span>
+                            <span class="text-[10px] text-gray-400">3 new</span>
+                        </div>
+                        <div class="space-y-2 text-xs">
+                            <div class="p-2 rounded bg-blue-950/30 border border-blue-500/20">Database backup successfully synchronized with cloud storage.</div>
+                            <div class="p-2 rounded bg-blue-950/30 border border-blue-500/20">New security rule applied across all cluster nodes.</div>
+                            <div class="p-2 rounded bg-blue-950/30 border border-blue-500/20">API rate limit threshold at 12%.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="relative">
+                    <button onclick="toggleSimulatorModal()" class="flex items-center space-x-3 glass-card px-3 py-1.5 rounded-lg hover:border-blue-500/50 transition">
+                        <div class="w-7 h-7 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center font-bold text-xs" id="visitor-avatar-initial">U</div>
+                        <div class="text-left hidden sm:block">
+                            <span class="block text-xs font-semibold leading-none" id="visitor-id-display">User #1</span>
+                            <span class="block text-[10px] text-blue-400 mt-0.5" id="current-role-badge">Admin (Prem)</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-xs text-gray-400"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-6 space-y-6" id="main-view-container"></div>
+    </main>
+
+    <!-- SIMULATOR MODAL -->
+    <div id="simulator-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="glass-card w-full max-w-md p-6 space-y-5 glow-box">
+            <div class="flex items-center justify-between border-b border-blue-900/20 pb-4">
+                <div>
+                    <h3 class="font-bold text-base">Client Package & Role Simulator</h3>
+                    <p class="text-xs text-gray-400">Test different tiers and permission levels live</p>
+                </div>
+                <button onclick="toggleSimulatorModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+
+            <div class="space-y-2">
+                <label class="text-xs font-semibold text-gray-300 uppercase tracking-wider">Select Package Tier</label>
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="changePackage('basic')" id="pkg-basic" class="p-3 rounded-lg border border-blue-900/20 text-center transition">
+                        <span class="block font-bold text-xs">Basic</span><span class="text-[10px] text-gray-400">$45</span>
+                    </button>
+                    <button onclick="changePackage('standard')" id="pkg-standard" class="p-3 rounded-lg border border-blue-900/20 text-center transition">
+                        <span class="block font-bold text-xs">Standard</span><span class="text-[10px] text-gray-400">$120</span>
+                    </button>
+                    <button onclick="changePackage('premium')" id="pkg-premium" class="p-3 rounded-lg border border-blue-500 bg-blue-600/10 text-center transition">
+                        <span class="block font-bold text-xs text-blue-400">Premium</span><span class="text-[10px] text-gray-400">$260</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <label class="text-xs font-semibold text-gray-300 uppercase tracking-wider">Select User Access Role</label>
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="changeRole('Administrator')" id="role-Administrator" class="p-2.5 rounded-lg border border-blue-500 bg-blue-600/10 text-center text-xs font-medium transition text-white">Administrator</button>
+                    <button onclick="changeRole('Editor')" id="role-Editor" class="p-2.5 rounded-lg border border-blue-900/20 text-center text-xs font-medium transition text-gray-400">Editor</button>
+                    <button onclick="changeRole('Viewer')" id="role-Viewer" class="p-2.5 rounded-lg border border-blue-900/20 text-center text-xs font-medium transition text-gray-400">Viewer</button>
+                </div>
+            </div>
+
+            <button onclick="toggleSimulatorModal()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 font-semibold rounded-lg text-sm transition shadow-lg shadow-blue-600/20">Apply Settings</button>
+        </div>
+    </div>
+
+    <!-- ADD ENTRY MODAL -->
+    <div id="add-entry-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="glass-card w-full max-w-sm p-6 space-y-4 glow-box">
+            <h3 class="font-bold text-base border-b border-blue-900/20 pb-3">Add New Database Entry</h3>
+            <div class="space-y-3 text-sm">
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Entry Name / Label</label>
+                    <input type="text" id="new-entry-name" placeholder="e.g. production_sync" class="w-full bg-[#070a12] border border-blue-900/30 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Data Type</label>
+                    <select id="new-entry-type" class="w-full bg-[#070a12] border border-blue-900/30 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+                        <option value="Type A">Type A</option><option value="Type B">Type B</option><option value="Type C">Type C</option><option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex space-x-3 pt-2">
+                <button onclick="closeAddModal()" class="flex-1 py-2 glass-card hover:bg-gray-800 text-xs font-medium rounded-lg transition">Cancel</button>
+                <button onclick="submitNewEntry()" class="flex-1 py-2 bg-blue-600 hover:bg-blue-500 text-xs font-semibold rounded-lg transition">Save Entry</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADD ROLE MODAL (Stvarni funkcionalni menu) -->
+    <div id="add-role-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="glass-card w-full max-w-sm p-6 space-y-4 glow-box">
+            <h3 class="font-bold text-base border-b border-blue-900/20 pb-3">Create New Custom Role</h3>
+            <div class="space-y-3 text-sm">
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Role Title</label>
+                    <input type="text" id="new-role-name" placeholder="e.g. Moderator" class="w-full bg-[#070a12] border border-blue-900/30 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Assign Permissions</label>
+                    <div class="space-y-2 pt-1 text-xs text-gray-300">
+                        <label class="flex items-center space-x-2"><input type="checkbox" checked class="accent-blue-600"> <span>Read Database</span></label>
+                        <label class="flex items-center space-x-2"><input type="checkbox" class="accent-blue-600"> <span>Write & Modify Entries</span></label>
+                        <label class="flex items-center space-x-2"><input type="checkbox" class="accent-blue-600"> <span>Manage Security Policy</span></label>
+                    </div>
+                </div>
+            </div>
+            <div class="flex space-x-3 pt-2">
+                <button onclick="closeAddRoleModal()" class="flex-1 py-2 glass-card hover:bg-gray-800 text-xs font-medium rounded-lg transition">Cancel</button>
+                <button onclick="alert('New role successfully created and mapped to schema!'); closeAddRoleModal();" class="flex-1 py-2 bg-blue-600 hover:bg-blue-500 text-xs font-semibold rounded-lg transition">Save Role</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
